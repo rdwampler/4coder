@@ -19,7 +19,14 @@ CUSTOM_BIN="$CUSTOM_ROOT/bin"
 # Get the build mode
 BUILD_MODE="$1"
 if [ -z "$BUILD_MODE" ]; then
+   case "$(uname -m)" in
+   arm64)
+    BUILD_MODE="-DDEV_BUILD_ARM64"
+    ;;
+   x86_64)
     BUILD_MODE="-DDEV_BUILD"
+    ;;
+   esac
 fi
 
 WARNINGS="-Wno-write-strings -Wno-comment -Wno-null-dereference -Wno-logical-op-parentheses -Wno-switch"

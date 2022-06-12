@@ -6,7 +6,15 @@
 #include <immintrin.h>
 #define _InterlockedExchangeAdd __sync_fetch_and_add
 #elif OS_MAC
+#if ARCH_X64
 #include <immintrin.h>
+#endif
+#if ARCH_ARM64
+function void _mm_pause()
+{
+  __asm__ volatile("isb\n");
+}
+#endif
 #define _InterlockedExchangeAdd __sync_fetch_and_add
 #else
 #include <intrin.h>

@@ -73,6 +73,7 @@ typedef u32 Arch_Code;
 enum{
     Arch_X64,
     Arch_X86,
+    Arch_ARM64,
     
     //
     Arch_COUNT,
@@ -82,6 +83,7 @@ enum{
 char *arch_names[] = {
     "x64",
     "x86",
+    "arm64"
 };
 
 #if OS_WINDOWS
@@ -402,7 +404,11 @@ build(Arena *arena, u32 flags, u32 arch, char *code_path, char **code_files, cha
 #define CLANG_LIBS_COMMON \
 "-framework Cocoa -framework QuartzCore " \
 "-framework CoreServices " \
-"-framework OpenGL -framework IOKit -framework Metal -framework MetalKit "
+"-framework OpenGL -framework IOKit -framework Metal -framework MetalKit " \
+	"-lz -lbz2 -L /opt/homebrew/lib/ -lpng "
+
+#define CLANG_LIBS_ARM64 CLANG_LIBS_COMMON \
+FOREIGN "/arm64/libfreetype-mac.a"
 
 #define CLANG_LIBS_X64 CLANG_LIBS_COMMON \
 FOREIGN "/x64/libfreetype-mac.a"
@@ -427,6 +433,10 @@ build(Arena *arena, u32 flags, u32 arch, char *code_path, char **code_files, cha
         case Arch_X86:
         fm_add_to_line(line, "-m32");
         fm_add_to_line(line, "-DFTECH_32_BIT"); break;
+
+        case Arch_ARM64:
+        fm_add_to_line(line, "-m64");
+        fm_add_to_line(line, "-DFTECH_64_BIT"); break;
         
         default: InvalidPath;
     }
@@ -474,6 +484,10 @@ build(Arena *arena, u32 flags, u32 arch, char *code_path, char **code_files, cha
         else if (arch == Arch_X86)
         {
             fm_add_to_line(line, CLANG_LIBS_X86);
+        }
+        else if (arch == Arch_ARM64)
+        {
+            fm_add_to_line(line, CLANG_LIBS_ARM64);
         }
     }
     
@@ -685,17 +699,20 @@ int main(int argc, char **argv){
     
     u32 flags = SUPER;
     u32 arch = Arch_X64;
-#if defined(DEV_BUILD) || defined(DEV_BUILD_X86)
+#if defined(DEV_BUILD) || defined(DEV_BUILD_X86) || defined(DEV_BUILD_ARM64)
     flags |= DEBUG_INFO | INTERNAL;
 #endif
-#if defined(OPT_BUILD) || defined(OPT_BUILD_X86)
+#if defined(OPT_BUILD) || defined(OPT_BUILD_X86) || defined(OPT_BUILD_ARM64)
     flags |= OPTIMIZATION;
 #endif
 #if defined(DEV_BUILD_X86) || defined(OPT_BUILD_X86)
     arch = Arch_X86;
 #endif
+#if defined(DEV_BUILD_ARM64) || defined(OPT_BUILD_ARM64)
+    arch = Arch_ARM64;
+#endif
     
-#if defined(DEV_BUILD) || defined(OPT_BUILD) || defined(DEV_BUILD_X86) || defined(OPT_BUILD_X86)
+#if defined(DEV_BUILD) || defined(OPT_BUILD) || defined(DEV_BUILD_X86) || defined(OPT_BUILD_X86) || defined(DEV_BUILD_ARM64) || defined(OPT_BUILD_ARM64)
     standard_build(&arena, cdir, flags, arch);
     
 #elif defined(PACKAGE_DEMO_X64)
@@ -703,12 +720,18 @@ int main(int argc, char **argv){
     
 #elif defined(PACKAGE_DEMO_X86)
     package(&arena, cdir, Tier_Demo, Arch_X86);
-    
+
+#elif defined(PACKAGE_DEMO_ARM64)
+    package(&arena, cdir, Tier_Demo, Arch_ARM64);
+
 #elif defined(PACKAGE_SUPER_X64)
     package(&arena, cdir, Tier_Super, Arch_X64);
     
 #elif defined(PACKAGE_SUPER_X86)
     package(&arena, cdir, Tier_Super, Arch_X86);
+
+#elif defined(PACKAGE_SUPER_ARM64)
+    package(&arena, cdir, Tier_Super, Arch_ARM64);
     
 #else
 # error No build type specified.
