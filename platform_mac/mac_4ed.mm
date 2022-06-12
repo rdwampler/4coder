@@ -1284,6 +1284,9 @@ main(int arg_count, char **args){
 
         mac_init_recursive_mutex(&mac_vars.thread_launch_mutex);
         pthread_cond_init(&mac_vars.thread_launch_cv, 0);
+		
+        // TODO(rdwampler): Find the best place to initialize this mutex.
+        mac_vars.global_frame_mutex = system_mutex_make();
 
         // NOTE(yuval): Screen scale factor calculation
         {
@@ -1507,8 +1510,6 @@ main(int arg_count, char **args){
         if (plat_settings.fullscreen_window){
             mac_vars.do_toggle = true;
         }
-
-        mac_vars.global_frame_mutex = system_mutex_make();
 
         mac_vars.timer_start = system_now_time();
 
